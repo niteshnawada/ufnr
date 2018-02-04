@@ -42,12 +42,23 @@ async.map(
 		var registry = registries[key];
 		var start = +new Date();
 		fetch.fetchUrl(registry.registry + 'pedding', { timeout: 3000 }, function(error, meta) {
-			cbk(null, {
-				name: key,
-				registry: registry.registry,
-				time: (+new Date() - start),
-				error: error || meta.status !== 200 ? true : false
-			});
+			let entry = {
+					name: key,
+					registry: registry.registry,
+					time: (+new Date() - start),
+					error: error || meta.status !== 200 ? true : false
+				    };
+			if(process.argv.indexOf("-v") != -1 || process.argv.indexOf("--verbose") != -1){
+				let paddedDuration = '    ';
+				if(entry.error){
+					paddedDuration = error.code || meta.status;
+				}else{
+					//paddedDuration = (paddedDuration + (entry.time/1000).toFixed(2)).slice(-Math.max(paddedDuration.length, entry.time.toString().length)) + ' s';
+					paddedDuration = (paddedDuration + entry.time).slice(-Math.max(paddedDuration.length, entry.time.toString().length)) + ' ms';
+				}
+				console.log('  %s[%s]\x1b[0m  %s', (entry.error?'\x1b[31m':'\x1b[32m'), paddedDuration, entry.registry);
+			}
+			cbk(null, entry);
 		});
 	},
 	function(err, rs) {
